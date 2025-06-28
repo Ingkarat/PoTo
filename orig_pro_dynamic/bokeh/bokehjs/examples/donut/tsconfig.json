@@ -1,0 +1,4 @@
+{
+  "extends": "../tsconfig.json",
+  "files": ["./donut.ts", "../bokehjs.d.ts"]
+}

@@ -1,0 +1,6 @@
+('/anaconda_lib/linting/pydocstyle/parser.py', 'Definition_class_initializer', '_human') 1
+('/anaconda_lib/linting/pydocstyle/parser.py', 'Module_class_initializer', '_nest') 1
+('/anaconda_lib/linting/pydocstyle/parser.py', 'Module_class_initializer', 'module') 1
+('/anaconda_lib/linting/pydocstyle/parser.py', 'Function_class_initializer', '_nest') 1
+('/anaconda_lib/linting/pydocstyle/parser.py', 'Class_class_initializer', '_nest') 1
+('/anaconda_lib/linting/pyflakes/checker.py', 'Checker_class_initializer', '_getDoctestExamples') 1

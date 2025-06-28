@@ -1,0 +1,4 @@
+('/pyndata/array.py', '__init__', 'kind') 6
+('/zfs/util.py', 'checksum', 'inherit') 6
+('/zfs/util.py', 'checksum', 'mode') 8
+('/zfs/util.py', 'decompress', 'mode') 8

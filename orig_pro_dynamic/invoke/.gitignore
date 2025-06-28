@@ -1,0 +1,11 @@
+_build
+build/
+dist/
+.coverage
+.tox
+*.egg-info
+*.py[cod]
+src/
+htmlcov
+coverage.xml
+.cache

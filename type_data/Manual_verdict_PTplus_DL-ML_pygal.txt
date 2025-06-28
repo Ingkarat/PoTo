@@ -1,0 +1,6 @@
+('/pygal/graph/base.py', '__init__', 'config') 6
+('/pygal/graph/graph.py', '_set_view', 'view_class') 6
+('/pygal/graph/time.py', 'timedelta_to_str', 'td') 1
+('/pygal/graph/bar.py', '_bar', 'x') 1
+('/pygal/graph/bar.py', '_tooltip_and_print_values', 'x') 1
+('/pygal/svg.py', 'confidence_interval', 'fmt') 1

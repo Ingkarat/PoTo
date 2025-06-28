@@ -1,0 +1,3 @@
+('/invoke/vendor/yaml3/constructor.py', 'SafeConstructor_class_initializer', 'timestamp_regexp') 1
+('/invoke/vendor/yaml3/reader.py', 'Reader_class_initializer', 'NON_PRINTABLE') 1
+('/invoke/collection.py', '_add_object', 'method') 1

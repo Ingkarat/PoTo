@@ -1,0 +1,3 @@
+('/bokeh/core/property/visual.py', 'FontSize_class_initializer', '_font_size_re') 1
+('/bokeh/util/version.py', 'is_full_release', 'VERSION_PAT') 1
+('/bokeh/plotting/_docstring.py', '_add_arglines', 'default') 5

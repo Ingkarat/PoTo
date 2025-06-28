@@ -1,0 +1,31 @@
+{
+  "compilerOptions": {
+    "noImplicitAny": true,
+    "noImplicitThis": true,
+    "noImplicitReturns": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "strictNullChecks": true,
+    "strictBindCallApply": false,
+    "strictFunctionTypes": false,
+    "strictPropertyInitialization": false,
+    "alwaysStrict": true,
+    "noErrorTruncation": true,
+    "noEmitOnError": false,
+    "stripInternal": true,
+    "declaration": true,
+    "sourceMap": true,
+    "importHelpers": false,
+    "experimentalDecorators": true,
+    "module": "ES2020",
+    "moduleResolution": "node",
+    "resolveJsonModule": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "target": "ES2017",
+    "lib": ["es2017", "dom", "dom.iterable"],
+    "types": ["hammerjs", "googlemaps"],
+    "baseUrl": "."
+  },
+  "include": ["./**/*.ts"]
+}

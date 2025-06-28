@@ -1,0 +1,5 @@
+import logging
+log = logging.getLogger(__name__)
+basic_scatter_script = '\nimport numpy as np\nfrom bokeh.plotting import figure\nfrom bokeh.io import curdoc\nN = 5\nx = np.linspace(0, 4*np.pi, N)\ny = np.sin(x)\np1 = figure()\np1.scatter(x,y, color="#FF00FF")\ndoc = curdoc()\ndoc.add_root(p1)\n'
+basic_svg_scatter_script = '\nimport numpy as np\nfrom bokeh.plotting import figure\nfrom bokeh.io import curdoc\nN = 5\nx = np.linspace(0, 4*np.pi, N)\ny = np.sin(x)\np1 = figure(output_backend="svg")\np1.scatter(x,y, color="#FF00FF")\ndoc = curdoc()\ndoc.add_root(p1)\n'
+multi_svg_scatter_script = '\nimport numpy as np\nfrom bokeh.plotting import figure\nfrom bokeh.layouts import Row\nfrom bokeh.io import curdoc\nN = 5\nx = np.linspace(0, 4*np.pi, N)\ny = np.sin(x)\np1 = figure(output_backend="svg")\np1.scatter(x,y, color="#FF00FF")\np2 = figure(output_backend="svg")\np2.scatter(x,y, color="#00FF00")\ndoc = curdoc()\ndoc.add_root(Row(p1, p2))\n'

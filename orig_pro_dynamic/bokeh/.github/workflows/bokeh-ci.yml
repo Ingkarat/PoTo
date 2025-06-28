@@ -1,0 +1,473 @@
+name: Bokeh-CI
+
+on:
+  push:
+    branches:
+      - master
+      - branch-*
+  pull_request:
+
+jobs:
+
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2-beta
+      - uses: goanpeca/setup-miniconda@v1
+        with:
+          miniconda-version: 'latest'
+          activate-environment: bk-test
+          environment-file: ci/environment-build.yml
+
+      - name: Cache node modules
+        uses: actions/cache@v1
+        with:
+          path: ~/.npm # npm cache files are stored in `~/.npm` on Linux/macOS
+          key: ${{ runner.os }}-node-${{ hashFiles('bokehjs/package-lock.json') }}
+
+      - name: Install node modules
+        shell: bash -l {0}
+        run: bash ci/install_node_modules.sh
+
+      - name: Build BokehJS
+        shell: bash -l {0}
+        run: bash ci/build_bokehjs.sh
+
+      - name: Upload BokehJS
+        uses: actions/upload-artifact@v1
+        with:
+          name: bokehjs-build
+          path: bokehjs-build.tgz
+
+      - name: Build conda package
+        shell: bash -l {0}
+        run: bash ci/build_conda_pacakge.sh
+
+      - name: Upload conda package
+        uses: actions/upload-artifact@v1
+        with:
+          name: conda-bld-noarch
+          path: conda-bld-noarch.tgz
+
+  codebase:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2-beta
+      - uses: goanpeca/setup-miniconda@v1
+        with:
+          miniconda-version: 'latest'
+          activate-environment: bk-test
+          environment-file: ci/environment-test-3.7.yml
+
+      - name: Cache node modules
+        uses: actions/cache@v1
+        with:
+          path: ~/.npm # npm cache files are stored in `~/.npm` on Linux/macOS
+          key: ${{ runner.os }}-node-${{ hashFiles('bokehjs/package-lock.json') }}
+
+      - name: Install node modules
+        shell: bash -l {0}
+        run: bash ci/install_node_modules.sh
+
+      # Don't cache sampledata - want to test at least one real download
+
+      - name: Install sampledata
+        shell: bash -l {0}
+        run: python -c 'import bokeh; bokeh.sampledata.download(progress=False)'
+
+      # - name: Run bokehjs codebase checks
+      #   working-directory: ./bokehjs
+      #   shell: bash -l {0}
+      #   run: |
+      #     node make build:all lint
+
+      - name: Run codebase checks
+        shell: bash -l {0}
+        run: pytest --color=yes tests/codebase
+
+      - name: MyPy
+        shell: bash -l {0}
+        run: |
+          mypy bokeh
+          mypy release
+
+  examples:
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2-beta
+      - uses: goanpeca/setup-miniconda@v1
+        with:
+          miniconda-version: 'latest'
+          activate-environment: bk-test
+          environment-file: ci/environment-test-3.6.yml
+
+      - name: Download Bokehjs
+        uses: actions/download-artifact@v1
+        with:
+          name: bokehjs-build
+
+      - name: Download conda package
+        uses: actions/download-artifact@v1
+        with:
+          name: conda-bld-noarch
+
+      - name: Unpack artifacts
+        shell: bash -l {0}
+        run: bash ci/unpack_artifacts.sh
+
+      - name: Cache node modules
+        uses: actions/cache@v1
+        with:
+          path: ~/.npm # npm cache files are stored in `~/.npm` on Linux/macOS
+          key: ${{ runner.os }}-node-${{ hashFiles('bokehjs/package-lock.json') }}
+
+      - name: Install node modules
+        shell: bash -l {0}
+        run: bash ci/install_node_modules.sh
+
+      - name: Install Bokeh package
+        shell: bash -l {0}
+        run: bash ci/install_bokeh_package.sh
+
+      - name: Start chrome headless
+        shell: bash -l {0}
+        run: google-chrome --headless --no-sandbox --remote-debugging-port=9222 &
+
+      - name: Cache sampledata
+        uses: actions/cache@v1
+        with:
+          path: ~/.bokeh/data
+          key: ${{ runner.os }}-sampledata-${{ hashFiles('bokeh/util/sampledata.json') }}
+
+      - name: Install sampledata
+        shell: bash -l {0}
+        run: python -c 'import bokeh; bokeh.sampledata.download(progress=False)'
+
+      - name: Run tests
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        shell: bash -l {0}
+        run: |
+          pytest -s -v --color=yes --tb line tests/test_examples.py
+
+      - name: Collect results
+        if: always()
+        shell: bash
+        run: |
+          DST="examples-report"
+          mkdir -p ${DST}
+          cp --parents examples-report.html $(cat .images-list) ${DST}
+
+      - name: Upload report
+        if: always()
+        uses: actions/upload-artifact@v1
+        with:
+          name: examples-report
+          path: examples-report
+
+  js-test:
+    needs: build
+    runs-on: ubuntu-20.04
+
+    steps:
+      - uses: actions/checkout@v2
+      - uses: goanpeca/setup-miniconda@v1
+        with:
+          miniconda-version: 'latest'
+          activate-environment: bk-test
+          environment-file: ci/environment-test-3.7.yml
+
+      - name: Download Bokehjs
+        uses: actions/download-artifact@v1
+        with:
+          name: bokehjs-build
+
+      - name: Download conda package
+        uses: actions/download-artifact@v1
+        with:
+          name: conda-bld-noarch
+
+      - name: Unpack artifacts
+        shell: bash -l {0}
+        run: bash ci/unpack_artifacts.sh
+
+      - name: Cache node modules
+        uses: actions/cache@v1
+        with:
+          path: ~/.npm # npm cache files are stored in `~/.npm` on Linux/macOS
+          key: ${{ runner.os }}-node-${{ hashFiles('bokehjs/package-lock.json') }}
+
+      - name: Install node modules
+        shell: bash -l {0}
+        run: bash ci/install_node_modules.sh
+
+      - name: Install Bokeh package
+        shell: bash -l {0}
+        run: bash ci/install_bokeh_package.sh
+
+      - name: Run tests
+        working-directory: bokehjs
+        shell: bash -l {0}
+        run: node make test --screenshot=skip
+
+  integration-tests:
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2-beta
+      - uses: goanpeca/setup-miniconda@v1
+        with:
+          miniconda-version: 'latest'
+          activate-environment: bk-test
+          environment-file: ci/environment-test-3.8.yml
+
+      - name: Download Bokehjs
+        uses: actions/download-artifact@v1
+        with:
+          name: bokehjs-build
+
+      - name: Download conda package
+        uses: actions/download-artifact@v1
+        with:
+          name: conda-bld-noarch
+
+      - name: Unpack artifacts
+        shell: bash -l {0}
+        run: bash ci/unpack_artifacts.sh
+
+      - name: Cache node modules
+        uses: actions/cache@v1
+        with:
+          path: ~/.npm # npm cache files are stored in `~/.npm` on Linux/macOS
+          key: ${{ runner.os }}-node-${{ hashFiles('bokehjs/package-lock.json') }}
+
+      - name: Install node modules
+        shell: bash -l {0}
+        run: bash ci/install_node_modules.sh
+
+      - name: Install Bokeh package
+        shell: bash -l {0}
+        run: bash ci/install_bokeh_package.sh
+
+      - name: Run tests
+        shell: bash -l {0}
+        run: pytest -v --tb=short --driver chrome --color=yes tests/integration
+
+  unit-test:
+    needs: build
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      fail-fast: false
+      max-parallel: 6
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        python-version: [3.6, 3.7, 3.8]
+
+    steps:
+      - uses: actions/checkout@v2-beta
+      - uses: goanpeca/setup-miniconda@v1
+        with:
+          miniconda-version: 'latest'
+          activate-environment: bk-test
+          environment-file: ci/environment-test-${{ matrix.python-version }}.yml
+
+      - name: Download Bokehjs
+        uses: actions/download-artifact@v1
+        with:
+          name: bokehjs-build
+
+      - name: Download conda package
+        uses: actions/download-artifact@v1
+        with:
+          name: conda-bld-noarch
+
+      - name: Unpack artifacts
+        shell: bash -l {0}
+        run: bash ci/unpack_artifacts.sh
+
+      - name: Cache node modules
+        uses: actions/cache@v1
+        with:
+          path: ~/.npm # npm cache files are stored in `~/.npm` on Linux/macOS
+          key: ${{ runner.os }}-node-${{ hashFiles('bokehjs/package-lock.json') }}
+
+      - name: Install node modules
+        shell: bash -l {0}
+        run: bash ci/install_node_modules.sh
+
+      - name: Install Bokeh package
+        shell: bash -l {0}
+        run: bash ci/install_bokeh_package.sh
+
+      - name: Cache sampledata
+        uses: actions/cache@v1
+        with:
+          path: ~/.bokeh/data
+          key: ${{ runner.os }}-sampledata-${{ hashFiles('bokeh/util/sampledata.json') }}
+
+      - name: Install sampledata
+        shell: bash -l {0}
+        run: python -c 'import bokeh; bokeh.sampledata.download(progress=False)'
+
+      - name: Run tests
+        shell: bash -l {0}
+        run: |
+          if [[ ! "$(python -c 'import platform; print(platform.python_version())' | cut -d' ' -f2)" == "${{ matrix.python-version }}"* ]]; then exit 1; fi
+          pytest --cov=bokeh --cov-config=tests/.coveragerc --color=yes tests/unit
+
+  minimal-deps:
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2-beta
+      - uses: goanpeca/setup-miniconda@v1
+        with:
+          miniconda-version: 'latest'
+          activate-environment: bk-test
+          environment-file: ci/environment-test-3.6.yml
+
+      - name: Download Bokehjs
+        uses: actions/download-artifact@v1
+        with:
+          name: bokehjs-build
+
+      - name: Download conda package
+        uses: actions/download-artifact@v1
+        with:
+          name: conda-bld-noarch
+
+      - name: Unpack artifacts
+        shell: bash -l {0}
+        run: bash ci/unpack_artifacts.sh
+
+      - name: Cache node modules
+        uses: actions/cache@v1
+        with:
+          path: ~/.npm # npm cache files are stored in `~/.npm` on Linux/macOS
+          key: ${{ runner.os }}-node-${{ hashFiles('bokehjs/package-lock.json') }}
+
+      - name: Install node modules
+        shell: bash -l {0}
+        run: bash ci/install_node_modules.sh
+
+      - name: Install Bokeh package
+        shell: bash -l {0}
+        run: bash ci/install_bokeh_package.sh
+
+      - name: Remove extra packages
+        shell: bash -l {0}
+        run: conda remove --yes --quiet --no-pin pandas scipy notebook scikit-learn sympy flask
+
+      - name: Run tests
+        shell: bash -l {0}
+        run: pytest -m "not sampledata" --cov=bokeh --cov-config=tests/.coveragerc --color=yes tests/unit
+
+  documentation:
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2-beta
+      - uses: goanpeca/setup-miniconda@v1
+        with:
+          miniconda-version: 'latest'
+          activate-environment: bk-test
+          environment-file: ci/environment-test-3.7.yml
+
+      - name: Download Bokehjs
+        uses: actions/download-artifact@v1
+        with:
+          name: bokehjs-build
+
+      - name: Download conda package
+        uses: actions/download-artifact@v1
+        with:
+          name: conda-bld-noarch
+
+      - name: Unpack artifacts
+        shell: bash -l {0}
+        run: bash ci/unpack_artifacts.sh
+
+      - name: Cache node modules
+        uses: actions/cache@v1
+        with:
+          path: ~/.npm # npm cache files are stored in `~/.npm` on Linux/macOS
+          key: ${{ runner.os }}-node-${{ hashFiles('bokehjs/package-lock.json') }}
+
+      - name: Install node modules
+        shell: bash -l {0}
+        run: bash ci/install_node_modules.sh
+
+      - name: Install Bokeh package
+        shell: bash -l {0}
+        run: bash ci/install_bokeh_package.sh
+
+      - name: Cache sampledata
+        uses: actions/cache@v1
+        with:
+          path: ~/.bokeh/data
+          key: ${{ runner.os }}-sampledata-${{ hashFiles('bokeh/util/sampledata.json') }}
+
+      - name: Install sampledata
+        shell: bash -l {0}
+        run: python -c 'import bokeh; bokeh.sampledata.download(progress=False)'
+
+      - name: Build docs
+        shell: bash -l {0}
+        run: bash ci/build_docs.sh
+
+  downstream:
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2-beta
+      - uses: goanpeca/setup-miniconda@v1
+        with:
+          miniconda-version: 'latest'
+          activate-environment: bk-test
+          environment-file: ci/environment-test-3.6.yml
+
+      - name: Download Bokehjs
+        uses: actions/download-artifact@v1
+        with:
+          name: bokehjs-build
+
+      - name: Download conda package
+        uses: actions/download-artifact@v1
+        with:
+          name: conda-bld-noarch
+
+      - name: Unpack artifacts
+        shell: bash -l {0}
+        run: bash ci/unpack_artifacts.sh
+
+      - name: Cache node modules
+        uses: actions/cache@v1
+        with:
+          path: ~/.npm # npm cache files are stored in `~/.npm` on Linux/macOS
+          key: ${{ runner.os }}-node-${{ hashFiles('bokehjs/package-lock.json') }}
+
+      - name: Install node modules
+        shell: bash -l {0}
+        run: bash ci/install_node_modules.sh
+
+      - name: Install Bokeh package
+        shell: bash -l {0}
+        run: bash ci/install_bokeh_package.sh
+
+      - name: Install downstream packages
+        shell: bash -l {0}
+        run: bash ci/install_downstream_packages.sh
+
+      - name: Run tests
+        shell: bash -l {0}
+        run: bash ci/run_downstream_tests.sh

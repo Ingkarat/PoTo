@@ -1,0 +1,3 @@
+('/pygal/graph/time.py', 'datetime_to_str', 'dt') 1
+('/pygal/graph/time.py', 'timedelta_to_str', 'td') 1
+('/pygal/graph/time.py', 'date_to_str', 'd') 1
