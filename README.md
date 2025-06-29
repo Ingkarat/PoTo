@@ -1,5 +1,5 @@
 ## PoTo
-PoTo: A Hybrid Andersen's Points-to Analysis for Python
+PoTo: A Hybrid Andersen's Points-to Analysis for Python. Accompanying paper is available [here](https://drops.dagstuhl.de/entities/document/10.4230/LIPIcs.ECOOP.2025.27).
 
 
 ## Python scripts and directories
