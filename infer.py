@@ -12,7 +12,7 @@ use_stable_version = False
 
 def main(argv):
     # TODO: Edit paths
-    current_dir = ".../ecoop_artifact_minimal_ana/"
+    current_dir = ".../PoTo/"
     global use_stable_version
     use_stable_version = False
 
@@ -30,7 +30,7 @@ def main(argv):
     # Take up to couple minutes for large libraries ()
     if choice == 1:
         for lib_name in libraries:
-            if lib_name != "mtgjson": continue
+            if lib_name != "cerberus": continue
             path_DLST = base_path_DLST + lib_name + ".json"
             path_DLML = base_path_DLML + lib_name + ".json"
             merge_two_DLInfer_json("ST", path_DLST, path_DLML, lib_name, current_dir)
@@ -40,7 +40,7 @@ def main(argv):
     # Similar to (1.)
     if choice == 2:
         for lib_name in libraries:
-            if lib_name != "mtgjson": continue
+            if lib_name != "cerberus": continue
             path_DLDY = base_path_DLDY + lib_name + ".json"
             path_DLML = base_path_DLML + lib_name + ".json"
             merge_two_DLInfer_json("DY", path_DLDY, path_DLML, lib_name, current_dir)
@@ -51,7 +51,7 @@ def main(argv):
     # 4. Export PoTo result into text file containing keys
     if choice == 4:
         for lib_name in libraries:
-            if lib_name != "mtgjson": continue
+            if lib_name != "cerberus": continue
             if lib_name == "ansible": 
                 ...
                 #TODO: maybe we copy form the pre-run results?
@@ -62,7 +62,7 @@ def main(argv):
     # then compare Poto+ with Pytype, DL-ST, DL-ML and DL-DY; result on stdout
     if choice == 5:
               
-       package_name = "mtgjson"
+       package_name = "cerberus"
        
        run_Pytype(package_name,current_dir)       
        print("\n\nPTplus to Pytype Comparison:\n============================")

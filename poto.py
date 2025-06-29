@@ -15,8 +15,8 @@ import pt_engine.globals as globals
 def main(argv):
 
     # TODO: edit package_name and current_dir 
-    package_name = "mtgjson"
-    current_dir = ".../ecoop_artifact_minimal_ana/"
+    package_name = "cerberus"
+    current_dir = ".../PoTo/"
     base_path_to_DLInfer_package = current_dir + "orig_pro_dynamic/"
     package_dir = base_path_to_DLInfer_package + package_name + "/"
     
